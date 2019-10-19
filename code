@@ -1,0 +1,156 @@
+'''
+Author:Aaron
+'''
+import numpy as np
+from numpy import matlib
+import scipy.stats as stats
+import matplotlib.pyplot as plt
+MAX_A=20
+MAX_B=20
+profit=10
+cost=2
+MAX_change=5
+Rent_A=3
+Return_A=3
+Rent_B=4
+Return_B=2
+prob_A=np.matlib.zeros((21,21))
+prob_B=np.matlib.zeros((21,21))
+prob_s=list()
+'''
+赋初值
+'''
+def prob_compute(n):
+    prob_text=list()
+    for i in range(21):
+        y=stats.poisson.pmf(n,i)
+        prob_text.append(y)
+    return prob_text
+prob_Rent_A=prob_compute(3)
+prob_Return_A=prob_compute(3)
+prob_Rent_B=prob_compute(4)
+prob_Return_B=prob_compute(2)
+'''
+计算AB两点租车、收车数为0-20辆的概率
+'''
+for i in range(21):
+    for j in range(21):
+        prob_A[i,j]=prob_Rent_A[i]*prob_Return_A[j]
+        prob_B[i,j]=prob_Rent_B[i]*prob_Return_B[j]
+'''
+计算AB两点（租、收）数对的概率值
+'''
+prob_ss_A=list()
+prob=0
+revenue_s_A=list()
+revenue=0
+for j in range(21):
+    for i in range(21):
+        if i<j:
+            for k in range(j-i,21):
+                prob+=prob_A[k-j+i,k]
+        if i==j:
+            for k in range(21):
+                prob+=prob_A[k,k]
+        if i>j:
+            for k in range(i-j,21):
+                prob+=prob_A[k,k-i+j]
+    prob_ss_A.append(prob)  #计算A每晚状态是0-20辆的概率
+for i in range(21):
+    for j in range(21):
+        if i<j:
+            for k in range(j-i,21):
+                revenue+=10*(k-j+i)*prob_A[k-j+i,k]/prob_ss_A[j]
+        if i==j:
+            for k in range(21):
+                revenue+=10*k*prob_A[k,k]/prob_ss_A[j]
+        if i>j:
+            for k in range(i-j,21):
+                revenue+=10*k*prob_A[k,k-i+j]/prob_ss_A[j]
+    revenue_s_A.append(revenue)  #计算A每早状态是0-20辆的期望价值
+prob_ss_B=list()
+prob=0
+revenue_s_B=list()
+revenue=0
+for j in range(21):
+    for i in range(21):
+        if i<j:
+            for k in range(j-i,21):
+                prob+=prob_B[k-j+i,k]
+        if i==j:
+            for k in range(21):
+                prob+=prob_B[k,k]
+        if i>j:
+            for k in range(i-j,21):
+                prob+=prob_B[k,k-i+j]
+    prob_ss_B.append(prob)  #计算B每晚状态是0-20辆的概率
+for i in range(21):
+    for j in range(21):
+        if i<j:
+            for k in range(j-i,21):
+                revenue+=10*(k-j+i)*prob_B[k-j+i,k]/prob_ss_B[j]
+        if i==j:
+            for k in range(21):
+                revenue+=10*k*prob_B[k,k]/prob_ss_B[j]
+        if i>j:
+            for k in range(i-j,21):
+                revenue+=10*k*prob_B[k,k-i+j]/prob_ss_B[j]
+    revenue_s_B.append(revenue)  #计算B每早状态是0-20辆的期望价值
+revenue_s=np.matlib.zeros((21,21))
+for i in range(21):
+    for j in range(21):
+        revenue_s[i,j]=revenue_s_A[i]+revenue_s_B[j]   #计算状态价值矩阵
+actions=[[-5,5],[-4,4],[-3,3],[-2,2],[-1,1],[0,0],[1,-1],[2,-2],[3,-3],[4,-4],[5,-5]]   #建立动作集合
+policy=np.matlib.zeros((21,21))#定义策略矩阵
+new_revenue=np.zeros((21*21)) #定义新的价值矩阵
+for i in range(21):
+    for j in range(21):
+        value=dict()    #定义策略-收益的字典
+        if i>=5&j>=5:
+            for l in range(11):
+                new=0.9*revenue_s[i+actions[l][0],j+actions[l][1]]-2*abs(actions[l][1])
+                value[i]=new
+        elif i>=5&j<5:
+            for l in range(5+j+1):
+                new = 0.9*revenue_s[i + actions[l][0], j + actions[l][1]] - 2 * abs(actions[l][0])
+                value[i]=new
+        elif i<5&j<5:
+            for l in range(5-i,5+j+1):
+                new = 0.9*revenue_s[i + actions[l][0], j + actions[l][1]] - 2 * abs(actions[l][1])
+                value[i]=new
+        elif i<5&j>=5:
+            for l in range(5-i,11):
+                new = 0.9*revenue_s[i + actions[l][0], j + actions[l][1]] - 2 * abs(actions[l][0])
+                value[i]=new
+        print(str(value))
+        '''
+        policy[i][j]=max(zip(value.values(), value.keys()))    #策略矩阵赋值为value最大的索引，也就是action的序号
+        new_revenue[i][j]=max(value.values())              #新的价值矩阵就是较原来提升最大的那个收益值
+        '''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
